@@ -21,10 +21,10 @@ You can test the service with Jetty:
 mvn jetty:run
 ```
 
-Connect to the site at http://localhost:8080/bioasq-datasource/jsServices. At that point you will see a simple page where the content includes the following.
+Connect to the site at http://localhost:8080/genetag-datasource/jsServices. At that point you will see a simple page where the content includes the following.
 
 <ul>
-    <li>GetTagDatasource</li>
+    <li>GeneTagDatasource</li>
     <ul>
         <li>interfaces</li>
         <ul>
