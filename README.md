@@ -1,19 +1,29 @@
 # GeneTagDatasource
 
 
-DataSource service to give access to GeneTag data from the MedTag corpus.
+DataSource service to give access to GeneTag data from the MedTag corpus. MedTag can be downloaded from ftp://ftp.ncbi.nlm.nih.gov/pub/lsmith/MedTag/, the paper on MedTag is
 
-MedTag can be downloaded from ftp://ftp.ncbi.nlm.nih.gov/pub/lsmith/MedTag/, the paper on MedTag is at https://www.researchgate.net/publication/234785358_MedTag_a_collection_of_biomedical_annotations
+> Lawrence H. Smith, Lorraine Tanabe, Thomas Rindflesch and W. John Wilbur. 2005. *MedTag: a collection of biomedical annotations*. ISMB '05 Proceedings of the ACL-ISMB Workshop on Linking Biological Literature, Ontologies and Databases: Mining Biological Semantics. Pages 32-37. Detroit, Michigan, June 24, 2005.
 
+The paper can be downloaded from [ResearchGate](https://www.researchgate.net/publication/234785358_MedTag_a_collection_of_biomedical_annotations).
 
-To test and create a service do the following (this assumes you have Maven installed):
+Before creating the service you need to create the data in the `src/main/resources` directory:
+
+```
+$ cd src/main/python
+$ python3 create_data.py
+```
+
+This creates the data that will be included in the web service's war file.
+
+To create and test the datasource service do the following (this assumes you have Maven installed):
 
 ```
 $ mvn generate-resources
 $ mvn clean package
 ```
 
-The first line generate the files `src/main/java/org/anc/lapps/datasource/generic/Version.java` and `VERSION` using the version number it found in the Maven POM file, and the second line compiles and creates the war archive target/GeneTagDatasource#VERSION.war that can be put on the LAPPS server.
+The first line generates the files `src/main/java/org/anc/lapps/datasource/generic/Version.java` and `VERSION` using the version number it found in the Maven POM file, and the second line compiles and creates the war archive target/GeneTagDatasource#VERSION.war that can be put on the LAPPS server.
 
 You can test the service with Jetty:
 
