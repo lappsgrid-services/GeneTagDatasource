@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright (c) 2017 The American National Corpus
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<configuration debug="false">
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!--
+            encoders are assigned the type
+            ch.qos.logback.classic.encoder.PatternLayoutEncoder by default
+        -->
+        <encoder>
+            <pattern>%date %-5level [%class{0}.%M:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <encoder>
+            <pattern>%date %-5level [%class{0}.%M:%line] %msg%n</pattern>
+        </encoder>
+        <append>true</append>
+        <file>/var/log/twitter-datasource.log</file>
+    </appender>
+    -->
+    <logger name="edu.brandeis" level="info"/>
+    <logger name="edu.brandeis.lapps.datasource" level="trace"/>
+    <root level="warn">
+        <appender-ref ref="STDOUT" />
+        <!-- <appender-ref ref="FILE"/> -->
+    </root>
+</configuration>

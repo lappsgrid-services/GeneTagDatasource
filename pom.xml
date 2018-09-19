@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.lappsgrid.maven</groupId>
+        <artifactId>war-parent-pom</artifactId>
+        <version>2.0.5</version>
+    </parent>
+    <groupId>edu.brandeis.lapps</groupId>
+    <artifactId>bioasq-datasource</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>GeneTag DataSource</name>
+    <packaging>war</packaging>
+
+	<properties>
+        <lapps.api.version>2.0.1</lapps.api.version>
+        <lapps.core.version>2.0.2</lapps.core.version>
+        <lapps.discriminator.version>2.3.0</lapps.discriminator.version>
+        <lapps.serialization.version>2.3.1</lapps.serialization.version>
+        <lapps.metadata.version>1.1.0</lapps.metadata.version>
+        <java.version>1.8</java.version>
+    </properties>
+
+	<build>
+        <finalName>BioAsqDatasource#${project.version}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.anc.maven.plugins</groupId>
+                <artifactId>anc-maven-plugin</artifactId>
+                <version>1.0.7</version>
+                <executions>
+                    <execution>
+                        <id>create-version</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>version</goal>
+                            <goal>version-class</goal>
+                        </goals>
+                        <configuration>
+                            <package>org.anc.lapps.datasource.generic</package>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <argLine>-Xms512m -Xmx512m</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+	<dependencies>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>discriminator</artifactId>
+            <version>${lapps.discriminator.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>core</artifactId>
+            <version>${lapps.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>api</artifactId>
+            <version>${lapps.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>serialization</artifactId>
+            <version>${lapps.serialization.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>metadata</artifactId>
+            <version>${lapps.metadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.anc.json</groupId>
+            <artifactId>validator</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.1.7</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+
+</project>

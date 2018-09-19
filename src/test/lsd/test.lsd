@@ -1,0 +1,57 @@
+#!/usr/bin/env lsd
+
+VERSION = new File('VERSION').text
+
+void prettyPrint(String json) {
+	println groovy.json.JsonOutput.prettyPrint(json)
+}
+
+boolean shutdown = false
+if (!isRunning('fdr')) {
+    println "Starting the docker container."
+    String cmd = "docker run -d -p 8080:8080 --name fdr -v /private/var/corpora/FDR:/var/lib/datasource lappsgrid/generic-datasource"
+    println cmd
+    String result = cmd.execute().text
+    if (! result || result.size() == 0) {
+        println 'Unable to start the Docker container.'
+        return
+    }
+    shutdown = true
+    print "Giving Tomcat time to spin up web services"
+    10.times {
+        print '...zzz'
+        Thread.sleep(1000)
+    }
+    println ''
+}
+else {
+    println "GenericDatasource is already running."
+    println "docker ps".execute().text
+}
+
+String url = "http://localhost:8080/GenericDatasource/$VERSION/services/GenericDatasource"
+ServiceClient service = new ServiceClient(url)
+String json = service.getMetadata()
+prettyPrint json
+//return
+
+Data data = new Data()
+data.discriminator = Uri.LIST
+data.payload = [:]
+json = data.asJson()
+json = service.execute(json)
+//println json
+prettyPrint json
+data = Serializer.parse(json, Data)
+assert 107 == data.payload.size() // : "Wrong number of items in datasource."
+def index = data.payload
+
+json = service.execute(new Data(Uri.GET, index[0]).asJson())
+data = Serializer.parse(json, Data)
+assert Uri.LIF == data.discriminator : data.payload
+println data.discriminator
+println data.payload
+println "All tests passed."
+boolean isRunning(String image) {
+	"docker ps".execute().text.contains(image)
+}
