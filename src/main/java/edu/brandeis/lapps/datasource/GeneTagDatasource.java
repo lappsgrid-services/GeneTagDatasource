@@ -162,7 +162,7 @@ public class GeneTagDatasource implements DataSource
 					.name(this.getClass().getName())
 					.version(Version.getVersion())
 					.vendor("http:/www.lappsgrid.org")
-					.allow(Discriminators.Uri.ANY)
+					.allow(Uri.ALL)
 					.encoding("UTF-8")
 					.format(Uri.LIF)
 					.description("GeneTag DataSource")

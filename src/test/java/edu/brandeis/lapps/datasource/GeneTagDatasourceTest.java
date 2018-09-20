@@ -16,9 +16,15 @@
 
 package edu.brandeis.lapps.datasource;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,12 +39,12 @@ import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
 
 
-public class GeneTagDatasourceTests
+public class GeneTagDatasourceTest
 {
 	protected GeneTagDatasource datasource;
 	protected boolean verbose = false;
 
-	public GeneTagDatasourceTests() {}
+	public GeneTagDatasourceTest() {}
 
 	@Before
 	public void setup()
@@ -92,6 +98,39 @@ public class GeneTagDatasourceTests
 		assertEquals("Wrong size of list", 14996, list.size());
 	}
 
+	@Test
+	public void testReadLines() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		String line = reader.readLine();
+		while (line != null) {
+			System.out.println(line);
+			line = reader.readLine();
+		}
+
+	}
+
+	@Test
+	public void testCollectStream() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		String content = reader.lines().collect(Collectors.joining("\n"));
+		System.out.println(content);
+	}
+
+	@Test
+	public void testForEachLine() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		reader.lines().forEach(System.out::println);
+	}
+
+	private BufferedReader open(String name) {
+		InputStream stream = this.getClass().getResourceAsStream("/sentences.txt");
+		assertNotNull(stream);
+		return new BufferedReader(new InputStreamReader(stream));
+	}
+
 	/**
 	 * Utility method for simple JSON parsing.
 	 * @param jsonString
@@ -103,7 +142,7 @@ public class GeneTagDatasourceTests
 			JSONParser parser = new JSONParser();
 			result = (JSONObject) parser.parse(jsonString);
 		} catch (ParseException ex) {
-			Logger.getLogger(GeneTagDatasourceTests.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(GeneTagDatasourceTest.class.getName()).log(Level.SEVERE, null, ex);
 			result = null;
 		}
 		return result;
