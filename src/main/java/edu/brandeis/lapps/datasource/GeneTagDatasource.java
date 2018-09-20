@@ -46,7 +46,7 @@ import org.lappsgrid.serialization.lif.Annotation;
 import org.lappsgrid.serialization.lif.Container;
 import org.lappsgrid.serialization.lif.Contains;
 import org.lappsgrid.serialization.lif.View;
-
+import org.lappsgrid.serialization.LifException;
 
 public class GeneTagDatasource implements DataSource
 {
@@ -130,7 +130,7 @@ public class GeneTagDatasource implements DataSource
 					try {
 						String sentence = new String(Files.readAllBytes(file.toPath())); 
 						return createTextWithAnnotations(sentence); }
-					catch (IOException e) {
+					catch (IOException | LifException e) {
 						return error(e.getMessage()); }}
 
 			case Uri.GETMETADATA:
@@ -181,7 +181,7 @@ public class GeneTagDatasource implements DataSource
 		return new Data<>(Uri.ERROR, message).asPrettyJson();
 	}
 
-	private String createTextWithAnnotations(String sentence) 
+	private String createTextWithAnnotations(String sentence) throws LifException
 	{
 		Container container = new Container();
 		int idx = sentence.indexOf('\n');
