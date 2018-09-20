@@ -207,7 +207,7 @@ public class GenericDatasource implements DataSource
 					.name(this.getClass().getName())
 					.version(Version.getVersion())
 					.vendor("http:/www.anc.org")
-					.allow(Discriminators.Uri.ANY)
+					.allow(Discriminators.Uri.ALL)
 					.encoding("UTF-8")
 					.format(Uri.LIF)
 					.description("Generic DataSource")

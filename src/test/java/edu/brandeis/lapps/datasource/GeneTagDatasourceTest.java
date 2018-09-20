@@ -16,9 +16,7 @@
 
 package edu.brandeis.lapps.datasource;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,12 +39,12 @@ import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
 
 
-public class GeneTagDatasourceTests
+public class GeneTagDatasourceTest
 {
 	protected GeneTagDatasource datasource;
 	protected boolean verbose = false;
 
-	public GeneTagDatasourceTests() {}
+	public GeneTagDatasourceTest() {}
 
 	@Before
 	public void setup()
@@ -144,7 +142,7 @@ public class GeneTagDatasourceTests
 			JSONParser parser = new JSONParser();
 			result = (JSONObject) parser.parse(jsonString);
 		} catch (ParseException ex) {
-			Logger.getLogger(GeneTagDatasourceTests.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(GeneTagDatasourceTest.class.getName()).log(Level.SEVERE, null, ex);
 			result = null;
 		}
 		return result;
