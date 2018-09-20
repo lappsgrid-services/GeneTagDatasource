@@ -114,6 +114,15 @@ def adjust_offset(sentence, offset):
             return adjusted
 
 
+def print_list(sentences):
+    fname = os.path.join('..', 'resources', 'data', 'sentences.txt')
+    with codecs.open(fname, 'w', encoding='utf8') as fh:
+        for s in sentences:
+            fh.write(s + u"\n")
+
+
+
 if __name__ == '__main__':
     sentences = read_data()
     print_data(sentences)
+    print_list(sentences)
