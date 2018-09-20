@@ -16,9 +16,17 @@
 
 package edu.brandeis.lapps.datasource;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,6 +98,39 @@ public class GeneTagDatasourceTests
 		JSONObject result = parseJson(json);
 		ArrayList list = (ArrayList) result.get("payload");
 		assertEquals("Wrong size of list", 14996, list.size());
+	}
+
+	@Test
+	public void testReadLines() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		String line = reader.readLine();
+		while (line != null) {
+			System.out.println(line);
+			line = reader.readLine();
+		}
+
+	}
+
+	@Test
+	public void testCollectStream() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		String content = reader.lines().collect(Collectors.joining("\n"));
+		System.out.println(content);
+	}
+
+	@Test
+	public void testForEachLine() throws IOException
+	{
+		BufferedReader reader = open("/sentences.txt");
+		reader.lines().forEach(System.out::println);
+	}
+
+	private BufferedReader open(String name) {
+		InputStream stream = this.getClass().getResourceAsStream("/sentences.txt");
+		assertNotNull(stream);
+		return new BufferedReader(new InputStreamReader(stream));
 	}
 
 	/**
