@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Brandeis University 
+ * Copyright (c) 2018 Brandeis University
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,13 +43,9 @@ public class GeneTagDatasourceTests
 	@Before
 	public void setup()
 	{
-		// Note that this  this will be executed every time a test method runs, moving
-		// this code to BioAsqDatasourceTests() made no difference. With more tests
-		// we will need another way to do set up.
-		System.setProperty(GeneTagDatasource.PROPERTY_NAME, "src/main/resources/index-identifiers.txt");
 		datasource = new GeneTagDatasource();
 	}
-	
+
 	@After
 	public void teardown()
 	{
@@ -57,24 +53,15 @@ public class GeneTagDatasourceTests
 	}
 
 	@Test
-	public void testIndex()
+	public void testSize()
 	{
 		// Testing whether we get the right kind of discriminator and the right number of
-		// entries in the index ("http://vocab.lappsgrid.org/ns/ok" and 8 respectively)
+		// entries in the index ("http://vocab.lappsgrid.org/ns/ok" and 14996 respectively)
 		Data data = new Data(Discriminators.Uri.SIZE);
 		String json = datasource.execute(data.asJson());
 		data = Serializer.parse(json, Data.class);
 		assertEquals("Invalid discriminator", Discriminators.Uri.OK, data.getDiscriminator());
-		assertEquals("Wrong number of entries", 2251, Integer.parseInt(data.getPayload().toString()));
-	}
-
-	@Test
-	public void testDump()
-	{
-		if (verbose) {
-			System.out.println();
-			datasource.dump();
-			System.out.println(); }
+		assertEquals("Wrong number of entries", 14996, Integer.parseInt(data.getPayload().toString()));
 	}
 
 	@Test
@@ -82,15 +69,17 @@ public class GeneTagDatasourceTests
 	{
 		// The key and the query are in both the sample data set and the full training
 		// data, so this should worked also when debugging with a small set.
-		String key = "589a246c78275d0c4a000032";
-		String query = "Which 2 medications are included in the Qsymia pill?";
+		String key = "P00055040A0000";
 		Data data = new Data(Discriminators.Uri.GET, key);
 		//System.out.println(data.asJson());
-		String json = datasource.execute(data.asJson());
-		JSONObject result = parseJson(json);
-		assertEquals("Wrong query for identifier", query, result.get("body"));
-		if (verbose)
-			System.out.println("\n" + json.substring(0, 300) + " ...\n");
+		String result = datasource.execute(data.asJson());
+		JSONObject json = parseJson(result);
+		Data dataOut = Serializer.parse(result, Data.class);
+		//System.out.println(result);
+		String payload = (String) dataOut.getPayload();
+		assertEquals("Wrong result for identifier", "pustulosis", payload.substring(22, 32));
+		//if (verbose)
+		//	System.out.println("\n" + json.substring(0, 300) + " ...\n");
 	}
 
 	@Test
@@ -100,15 +89,13 @@ public class GeneTagDatasourceTests
 		String json = datasource.execute(data.asPrettyJson());
 		JSONObject result = parseJson(json);
 		ArrayList list = (ArrayList) result.get("payload");
-		assertEquals("Wrong size of list", 2251, list.size());
-		if (verbose)
-			System.out.println("\n" + list + "\n");
+		assertEquals("Wrong size of list", 14996, list.size());
 	}
 
 	/**
 	 * Utility method for simple JSON parsing.
 	 * @param jsonString
-	 * @return 
+	 * @return
 	 */
 	private JSONObject parseJson(String jsonString) {
 		JSONObject result;

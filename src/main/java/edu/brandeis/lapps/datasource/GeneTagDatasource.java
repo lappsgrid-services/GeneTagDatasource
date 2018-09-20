@@ -35,35 +35,33 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.anc.lapps.datasource.generic.Version;
+import org.lappsgrid.serialization.lif.Annotation;
+import org.lappsgrid.serialization.lif.Container;
+import org.lappsgrid.serialization.lif.Contains;
+import org.lappsgrid.serialization.lif.View;
 
 
 public class GeneTagDatasource implements DataSource
 {
 	private static final Logger logger = LoggerFactory.getLogger(GeneTagDatasource.class);
 
-	public static final String PROPERTY_NAME = "DATASOURCE_INDEX";
+	//public static final String PROPERTY_NAME = "DATASOURCE_INDEX";
 
+	private final String path = "src/main/resources/data/";
 	private String metadata;
 	private Map<String, File> index;
 	private List<String> keys;
-
 	private String cachedError;
 
-	public GeneTagDatasource()
-	{
-		String path = System.getProperty(PROPERTY_NAME);
-		if (path == null)
-			path = System.getenv(PROPERTY_NAME);
-		if (path == null)
-			path = "src/main/resources/index-identifiers.txt";
-		loadIndex(path);
-	}
+
+	public GeneTagDatasource() {}
 
 
 	/**
@@ -76,114 +74,76 @@ public class GeneTagDatasource implements DataSource
 	 * Errors and exceptions the occur during processing should be wrapped in a {@code Data}
 	 * object with the discriminator set to http://vocab.lappsgrid.org/ns/error
 	 * <p>
-	 * See <a href="https://lapp.github.io/org.lappsgrid.serialization/index.html?org/lappsgrid/serialization/Data.html>org.lappsgrid.serialization.Data</a><br />
-	 * See <a href="https://lapp.github.io/org.lappsgrid.serialization/index.html?org/lappsgrid/serialization/lif/Container.html>org.lappsgrid.serialization.lif.Container</a><br />
+	 * See <a href="https://lapps.github.io/org.lappsgrid.serialization/index.html?org/lappsgrid/serialization/Data.html>org.lappsgrid.serialization.Data</a><br />
+	 * See <a href="https://lapps.github.io/org.lappsgrid.serialization/index.html?org/lappsgrid/serialization/lif/Container.html>org.lappsgrid.serialization.lif.Container</a><br />
 	 *
 	 * @param input A JSON string representing a Data object
 	 * @return A JSON string containing a Data object with a Container payload.
 	 */
-	//@Override
+	@Override
 	public String execute(String input)
 	{
 		if (cachedError != null)
-		{
 			return cachedError;
-		}
 		Data data = Serializer.parse(input, Data.class);
 		String discriminator = data.getDiscriminator();
-		if (Uri.ERROR.equals(discriminator)) {
+		if (Uri.ERROR.equals(discriminator))
 			return input;
-		}
 
-		System.out.println("INPUT: " + input + "\n");
+		//System.out.println("INPUT: " + input + "\n");
 
-		String result;
 		switch (discriminator)
 		{
 			case Uri.SIZE:
+
 				Data<Integer> sizeData = new Data<>();
-				Data d;
 				sizeData.setDiscriminator(Uri.OK);
-				sizeData.setPayload(index.size());
-				result = Serializer.toJson(sizeData);
-				break;
+				sizeData.setPayload(14996);
+				return Serializer.toJson(sizeData);
 
 			case Uri.LIST:
-				Map payload = (Map) data.getPayload();
-				if (payload == null)
-				{
-					payload = new HashMap<String,String>();
-				}
 
-				List<String> list = keys;
-				Object startValue = payload.get("start");
-				if (startValue != null)
-				{
-					int start = 0;
-					int offset = Integer.parseInt(startValue.toString());
-					if (offset >= 0) {
-						start = offset;
-					}
-					int end = index.size();
-					Object endValue = payload.get("end");
-					if (endValue != null)
-					{
-						offset = Integer.parseInt(endValue.toString());
-						if (offset >= start) {
-							end = offset;
-						}
-					}
-					list = keys.subList(start, end);
-				}
+				File listFile = new File(this.path + "sentences.txt");
+				String contents;
+				try {
+					contents = new String(Files.readAllBytes(listFile.toPath())); }
+				catch (IOException e) {
+					return error(e.getMessage()); }
+				List<String> sentences = new ArrayList();
+				sentences.addAll(Arrays.asList(contents.split("\\s+")));
 				Data<java.util.List<String>> listData = new Data<>();
 				listData.setDiscriminator(Uri.STRING_LIST);
-				listData.setPayload(list);
-				result = Serializer.toJson(listData);
-				break;
+				listData.setPayload(sentences);
+				return Serializer.toJson(listData);
 
 			case Uri.GET:
+
 				String key = data.getPayload().toString();
 				if (key == null)
-				{
-					result = error("No key value provided");
-				}
-				else
-				{
-					File file = index.get(key);
-					if (file == null)
-					{
-						result = error("No file with key " + key);
-					}
-					else if (!file.exists())
-					{
-						result = error("File not found: " + file.getPath());
-					}
-					else
-					{
-						try
-						{
-							result = new String(Files.readAllBytes(file.toPath()));
-						}
-						catch (IOException e)
-						{
-							result = error(e.getMessage());
-						}
-					}
-
-				}
-				break;
+					return error("No key value provided");
+				else {
+					String fname = this.path + key.substring(0, 3) + File.separator
+							+ key.substring(0, 4) + File.separator + key;
+					File file = new File(fname);
+					if (! file.exists())
+						return error("File not found: " + file.getPath());
+					try {
+						String sentence = new String(Files.readAllBytes(file.toPath())); 
+						return createTextWithAnnotations(sentence); }
+					catch (IOException e) {
+						return error(e.getMessage()); }}
 
 			case Uri.GETMETADATA:
-				result = metadata;
-				break;
+
+				return metadata;
 
 			default:
+
 				String message = String.format("Invalid discriminator: %s, Uri.List is %s", discriminator, Uri.LIST);
 				//logger.warn(message);
-				result = error(message);
-				break;
+				return error(message);
 		}
-		return result;
+
 	}
 
 	/**
@@ -194,7 +154,7 @@ public class GeneTagDatasource implements DataSource
 	 * <a href="http://vocab.lappsgrid.org/schema/datasource-schema.json">http://vocab.lappsgrid.org/schema/datasource-schema.json</a>
 	 * (datasources).
 	 */
-//	@Override
+	@Override
 	public String getMetadata()
 	{
 		if (metadata == null) {
@@ -204,8 +164,8 @@ public class GeneTagDatasource implements DataSource
 					.vendor("http:/www.lappsgrid.org")
 					.allow(Discriminators.Uri.ANY)
 					.encoding("UTF-8")
-					.format(Uri.JSON)
-					.description("BioAsq DataSource")
+					.format(Uri.LIF)
+					.description("GeneTag DataSource")
 					.license(Discriminators.Uri.APACHE2)
 					.build();
 			Data data = new Data();
@@ -216,41 +176,43 @@ public class GeneTagDatasource implements DataSource
 		return metadata;
 	}
 
-	protected String[] addKey(String[] key) {
-		logger.trace("Key: {} Path: {}", key[0], key[1]);
-		keys.add(key[0]);
-		index.put(key[0], new File(key[1]));
-		return key;
-	}
-
-	protected void loadIndex(String path)
-	{
-		logger.debug("Loading the index from {}", path);
-		keys = new ArrayList<>();
-		try
-		{
-			Stream<String> stream = Files.lines(Paths.get(path));
-			index = stream.map(s -> s.split("\t"))
-					.map(a -> {keys.add(a[0]); return a;})
-					.collect(Collectors.toMap(a->a[0], a->new File(a[1])));
-			logger.debug("Index contains {} entries", index.size());
-			//index.forEach((k,v) -> System.out.println(k + " = " + v));
-		}
-		catch (IOException e)
-		{
-			logger.error("Unable to load the index.", e);
-			index = new HashMap<>();
-		}
-	}
-
-	protected void dump() {
-		keys.forEach(k -> {
-			System.out.println(String.format("%s -> %s", k, index.get(k)));
-		});
-	}
-
 	protected String error(String message)
 	{
 		return new Data<>(Uri.ERROR, message).asPrettyJson();
+	}
+
+	private String createTextWithAnnotations(String sentence) 
+	{
+		Container container = new Container();
+		int idx = sentence.indexOf('\n');
+		container.setText(sentence.substring(0, idx));
+		container.setLanguage("en");
+
+		String annotations = sentence.substring(idx).trim();
+		String[] annos = annotations.split("\n");
+
+		View view = container.newView();
+		view.addContains(Uri.NE, "GeneTag Gold Data", "xxx");
+		//System.out.println(view.metadata);
+		Contains contains = view.getContains(Uri.NE);
+		contains.put("namedEntityCategorySet", "value");
+		//contains.data;
+		//contains.setTagSet("SSSS");
+		for (int i=0; i<annos.length; i++) {
+			String[] fields = annos[i].split("\t");
+			int p1 = Integer.parseInt(fields[0]);
+			int p2 = Integer.parseInt(fields[1]);
+			Annotation x = new Annotation("ne" + i, Uri.NE, p1, p2);
+			x.addFeature("type", "GENE");
+			view.addAnnotation(x);
+		}
+		
+		Data<Container> alldata = new Data<>(Uri.LIF, container);
+		System.out.println(alldata.asPrettyJson());
+
+		Data data = new Data<>();
+		data.setDiscriminator(Uri.LIF);
+		data.setPayload(sentence);
+		return data.asPrettyJson();
 	}
 }
