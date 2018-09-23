@@ -19,6 +19,7 @@
 
 package edu.brandeis.lapps.datasource;
 
+import java.io.BufferedReader;
 import org.lappsgrid.api.DataSource;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.metadata.DataSourceMetadata;
@@ -32,15 +33,12 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.logging.Level;
 import org.anc.lapps.datasource.generic.Version;
 import org.lappsgrid.serialization.lif.Annotation;
 import org.lappsgrid.serialization.lif.Container;
@@ -56,8 +54,8 @@ public class GeneTagDatasource implements DataSource
 
 	private final String path = "src/main/resources/data/";
 	private String metadata;
-	private Map<String, File> index;
-	private List<String> keys;
+	//private Map<String, File> index;
+	//private List<String> keys;
 	private String cachedError;
 
 
@@ -103,14 +101,7 @@ public class GeneTagDatasource implements DataSource
 
 			case Uri.LIST:
 
-				File listFile = new File(this.path + "sentences.txt");
-				String contents;
-				try {
-					contents = new String(Files.readAllBytes(listFile.toPath())); }
-				catch (IOException e) {
-					return error(e.getMessage()); }
-				List<String> sentences = new ArrayList();
-				sentences.addAll(Arrays.asList(contents.split("\\s+")));
+				ArrayList<String> sentences = readSentences();
 				Data<java.util.List<String>> listData = new Data<>();
 				listData.setDiscriminator(Uri.STRING_LIST);
 				listData.setPayload(sentences);
@@ -122,16 +113,26 @@ public class GeneTagDatasource implements DataSource
 				if (key == null)
 					return error("No key value provided");
 				else {
-					String fname = this.path + key.substring(0, 3) + File.separator
+					String fname = "/data/" + key.substring(0, 3) + File.separator
+							+ key.substring(0, 4) + File.separator + key;
+					String sentence = readSentence(fname);
+					try {
+						return createTextWithAnnotations(sentence); }
+					catch (LifException ex) {
+						return error(ex.getMessage()); }}
+					/*
+					System.out.println(">>> " + xx);
+					fname = this.path + key.substring(0, 3) + File.separator
 							+ key.substring(0, 4) + File.separator + key;
 					File file = new File(fname);
 					if (! file.exists())
 						return error("File not found: " + file.getPath());
 					try {
-						String sentence = new String(Files.readAllBytes(file.toPath())); 
+						String sentence = new String(Files.readAllBytes(file.toPath()));
 						return createTextWithAnnotations(sentence); }
 					catch (IOException | LifException e) {
 						return error(e.getMessage()); }}
+					*/
 
 			case Uri.GETMETADATA:
 
@@ -181,6 +182,12 @@ public class GeneTagDatasource implements DataSource
 		return new Data<>(Uri.ERROR, message).asPrettyJson();
 	}
 
+	/**
+	 * Return a Data object for the sentence and associated GENE annotations.
+	 * @param sentence
+	 * @return A Data object whose payload is a LIF object.
+	 * @throws LifException
+	 */
 	private String createTextWithAnnotations(String sentence) throws LifException
 	{
 		Container container = new Container();
@@ -192,27 +199,65 @@ public class GeneTagDatasource implements DataSource
 		String[] annos = annotations.split("\n");
 
 		View view = container.newView();
-		view.addContains(Uri.NE, "GeneTag Gold Data", "xxx");
-		//System.out.println(view.metadata);
+		view.addContains(Uri.NE, "GeneTag Gold Data", null);
 		Contains contains = view.getContains(Uri.NE);
-		contains.put("namedEntityCategorySet", "value");
-		//contains.data;
-		//contains.setTagSet("SSSS");
+		contains.put("namedEntityCategorySet", "tags-ner-biomedical");
 		for (int i=0; i<annos.length; i++) {
 			String[] fields = annos[i].split("\t");
 			int p1 = Integer.parseInt(fields[0]);
 			int p2 = Integer.parseInt(fields[1]);
-			Annotation x = new Annotation("ne" + i, Uri.NE, p1, p2);
-			x.addFeature("type", "GENE");
-			view.addAnnotation(x);
-		}
-		
-		Data<Container> alldata = new Data<>(Uri.LIF, container);
-		System.out.println(alldata.asPrettyJson());
+			Annotation a = new Annotation("ne" + i, Uri.NE, p1, p2);
+			a.addFeature("category", "GENE");
+			view.addAnnotation(a); }
 
-		Data data = new Data<>();
-		data.setDiscriminator(Uri.LIF);
-		data.setPayload(sentence);
-		return data.asPrettyJson();
+		Data<Container> alldata = new Data<>(Uri.LIF, container);
+		return alldata.asPrettyJson();
+	}
+
+
+	/**
+	 * Return the content of a single file in the data directory, representing a
+	 * single sentence and it GENE annotations.
+	 */
+	private String readSentence(String fname)
+	{
+		StringBuilder buffer = new StringBuilder();
+		try {
+			BufferedReader reader = openResource(fname);
+			String line = null;
+			while((line = reader.readLine()) != null)
+				buffer.append(line).append("\n");
+		} catch (IOException ex) {
+			java.util.logging.Logger.getLogger(GeneTagDatasource.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		return buffer.toString();
+	}
+
+	/**
+	 * Return a list of all sentence identifiers in /data/sentences.txt.
+	 */
+	private ArrayList<String> readSentences()
+	{
+		ArrayList<String> sentences = new ArrayList<>();
+		try {
+			BufferedReader reader = openResource("/data/sentences.txt");
+			String line;
+			line = reader.readLine();
+			sentences.add(line.trim());
+			while (true) {
+				line = reader.readLine();
+				if (line == null)
+					break;
+				sentences.add(line.trim()); }
+		} catch (IOException ex) {
+			java.util.logging.Logger.getLogger(GeneTagDatasource.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		return sentences;
+	}
+
+	private BufferedReader openResource(String name)
+	{
+		InputStream stream = this.getClass().getResourceAsStream(name);
+		return new BufferedReader(new InputStreamReader(stream));
 	}
 }

@@ -4,7 +4,10 @@ target
 *.ipr
 *.iws
 VERSION
+src/main/resources/data
 src/main/java/**/Version.java
 src/main/docker/*.war
 .DS_Store
+nb-configuration.xml
+
 

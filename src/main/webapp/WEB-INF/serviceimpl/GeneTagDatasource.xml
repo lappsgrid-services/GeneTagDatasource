@@ -20,7 +20,7 @@
     <bean id="target" class="jp.go.nict.langrid.servicecontainer.handler.TargetServiceFactory" >
         <property name="service">
             <!-- This is the ONLY thing that should be changed. -->
-            <bean class="edu.brandeis.lapps.datasource.GenTagDatasource" />
+            <bean class="edu.brandeis.lapps.datasource.GeneTagDatasource" />
         </property>
     </bean>
 </beans>

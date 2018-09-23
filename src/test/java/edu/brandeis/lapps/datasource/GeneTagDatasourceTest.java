@@ -73,19 +73,27 @@ public class GeneTagDatasourceTest
 	@Test
 	public void testGet()
 	{
-		// The key and the query are in both the sample data set and the full training
-		// data, so this should worked also when debugging with a small set.
-		String key = "P00055040A0000";
-		Data data = new Data(Discriminators.Uri.GET, key);
-		//System.out.println(data.asJson());
-		String result = datasource.execute(data.asJson());
+		String key = "P00027739T0000";
+		Data dataIn = new Data(Discriminators.Uri.GET, key);
+		String result = datasource.execute(dataIn.asJson());
+		if (verbose)
+			System.out.println(result);
+
 		JSONObject json = parseJson(result);
-		Data dataOut = Serializer.parse(result, Data.class);
-		//System.out.println(result);
-		String payload = (String) dataOut.getPayload();
-		assertEquals("Wrong result for identifier", "pustulosis", payload.substring(22, 32));
-		//if (verbose)
-		//	System.out.println("\n" + json.substring(0, 300) + " ...\n");
+		JSONObject payload = (JSONObject) json.get("payload");
+		JSONObject text = (JSONObject) payload.get("text");
+		String value = (String) text.get("@value");
+		assertEquals("Wrong result for P00027739T0000", "gamma", value.substring(6, 11));
+
+		// I would really like to do the test using the serializer to parse the json string:
+		//Data dataOut = Serializer.parse(result, Data.class);
+		//Object pl = dataOut.getPayload();
+		// The problem is that I do not know how to deal with that Data class. It
+		// responds to the getPayLoad() message but I cannot find the code for that
+		// one anywhere. In this case it returns a java.util.LinkedHashMap, but I
+		// don't know whether I can rely on that.
+		//System.out.println(pl);
+		//System.out.println(pl.getClass());
 	}
 
 	@Test
@@ -98,11 +106,12 @@ public class GeneTagDatasourceTest
 		assertEquals("Wrong size of list", 14996, list.size());
 	}
 
-	@Test
+	//@Test
 	public void testReadLines() throws IOException
 	{
 		BufferedReader reader = open("/sentences.txt");
 		String line = reader.readLine();
+		System.out.println(line);
 		while (line != null) {
 			System.out.println(line);
 			line = reader.readLine();
@@ -110,7 +119,7 @@ public class GeneTagDatasourceTest
 
 	}
 
-	@Test
+	//@Test
 	public void testCollectStream() throws IOException
 	{
 		BufferedReader reader = open("/sentences.txt");
@@ -118,7 +127,7 @@ public class GeneTagDatasourceTest
 		System.out.println(content);
 	}
 
-	@Test
+	//@Test
 	public void testForEachLine() throws IOException
 	{
 		BufferedReader reader = open("/sentences.txt");
@@ -134,7 +143,7 @@ public class GeneTagDatasourceTest
 	/**
 	 * Utility method for simple JSON parsing.
 	 * @param jsonString
-	 * @return
+	 * @return A JSONObject for the input string
 	 */
 	private JSONObject parseJson(String jsonString) {
 		JSONObject result;
